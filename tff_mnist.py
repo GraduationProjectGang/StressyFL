@@ -2,17 +2,73 @@ import collections
 import numpy as np
 import tensorflow as tf
 import tensorflow_federated as tff
+import json
+import time
+import pprint
+import keras
+from ast import literal_eval
+from dataclasses import dataclass
+from datetime import datetime
+import time
+import csv
+import ast
+from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
+from keras.datasets import reuters
+from keras.utils import np_utils
+from keras.preprocessing import sequence
+from keras.models import Sequential
+from keras.layers import Dense, Embedding, LSTM, Dropout
+from keras.layers import Flatten
+from keras import regularizers, optimizers
+from keras.callbacks import LambdaCallback, ModelCheckpoint
+from keras.models import model_from_json
 
 np.random.seed(0)
 
+filePath_data = '\\home\\team6\\Documents\\GitHub\\StressyFL\\trainingData2.csv'
+filePath_stress = '\\home\\team6\\Documents\\GitHub\\StressyFL\\stressData2.csv'
+
 # 데이터 불러오기
 
-emnist_train, emnist_test = tff.simulation.datasets.emnist.load_data()
+trainingData_x = []
+trainingData_y = []
+
+with open(filePath_data, encoding= 'UTF-8') as file:
+  data = csv.reader(file)
+
+  for object in data:
+    dummy_list = []
+    for each in object:
+      each = ast.literal_eval(each)
+      map(float, each)
+      dummy_list.append(each)
+
+    trainingData_x.append(dummy_list)
+
+with open(filePath_stress, encoding= 'UTF-8') as file:
+  data = csv.reader(file)
+  for list in data:
+    for stressCount in list:
+      trainingData_y.append(float(stressCount))
+
+trainingData_x = np.array(trainingData_x)
+
+trainingData_x = ((2 * (trainingData_x - trainingData_x.min(axis=0))) / (trainingData_x.max(axis=0) - trainingData_x.min(axis=0))) - 1
+trainingData_x = np.reshape(trainingData_x, (4014, 5, 6))
 
 # 클라이언트로 데이터 나누기
 
-example_dataset = emnist_train.create_tf_dataset_for_client(
-    emnist_train.client_ids[0])
+x_train,x_val,y_train,y_val = train_test_split(trainingData_x, trainingData_y, test_size = 0.3)
+
+y_train = np_utils.to_categorical(y_train)
+y_val = np_utils.to_categorical(y_val)
+one_hot_vec_size = y_train.shape[1]
+
+
+
+
+
 
 NUM_CLIENTS = 10
 NUM_EPOCHS = 5
