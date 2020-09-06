@@ -28,7 +28,7 @@ from keras import backend as K
 from sklearn.metrics import accuracy_score
 
 physical_devices = tf.config.list_physical_devices('GPU')
-tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
+# tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
 
 filePath_data = './trainingData_all.csv'
 filePath_stress = './stressData_all.csv'
