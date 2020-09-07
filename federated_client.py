@@ -27,6 +27,11 @@ from tensorflow.keras.models import Model
 from keras import backend as K
 from sklearn.metrics import accuracy_score
 
+# Failed to find the dnn implementation 오류 시
+
+physical_devices = tf.config.list_physical_devices('GPU')
+tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
+
 # 0. Data 저장할 변수 선언
 
 trainingData_x = []
@@ -66,14 +71,6 @@ def import_data(data_path, stress_path):
     ret_x = np.reshape(ret_x, (4014, 5, 6))
 
     return ret_x, ret_y
-
-trainingData_x, trainingData_y = import_data(filePath_data, filePath_stress)
-
-x_train,x_val,y_train,y_val = train_test_split(trainingData_x, trainingData_y, test_size = 0.1)
-
-y_train = np_utils.to_categorical(y_train)
-y_val = np_utils.to_categorical(y_val)
-one_hot_vec_size = y_train.shape[1]
 
 # 2. Averaging Function 정의
 
@@ -137,7 +134,6 @@ class Stressy_Model:
         model.add(Dense(one_hot_vec_size, activation='softmax'))
         return model
 
-
 # 4. Client 관련 함수 생성
 
 # 4-1. create_clients : Input, Output 데이터 가지고 Client를 생성
@@ -163,14 +159,77 @@ def create_clients(data_list, label_list, num_clients, initial='clients'):
     return {client_names[i] : shards[i] for i in range(len(client_names))}
 
 # 4-2. batch_data : Client Data들을 가져와서 Tf.Dataset 객체 생성
+# shard : 데이터, 라벨 묶음
+# bs : 배치 사이즈
+# return : tf.dataset 객체
 def batch_data(data_shard, bs=1):
-    '''
-    args:
-        shard: a data, label constituting a client's data shard
-        bs:batch size
-    return:
-        tfds object'''
     #seperate shard into data and labels lists
+    # 데이터 파편을 데이터와 레이블 리스트로 나눠
     data, label = zip(*data_shard)
     dataset = tf.data.Dataset.from_tensor_slices((list(data), list(label)))
     return dataset.shuffle(len(label)).batch(bs)
+
+trainingData_x, trainingData_y = import_data(filePath_data, filePath_stress)
+
+x_train,x_val,y_train,y_val = train_test_split(trainingData_x, trainingData_y, test_size = 0.1)
+
+y_train = np_utils.to_categorical(y_train)
+y_val = np_utils.to_categorical(y_val)
+one_hot_vec_size = y_train.shape[1]
+
+clients = create_clients(x_train, y_train, num_clients=5)
+
+clients_batched = dict()
+
+for(client_name, data) in clients.items():
+    clients_batched[client_name] = batch_data(data)
+
+test_batched = tf.data.Dataset.from_tensor_slices((x_val, y_val)).batch(len(y_val))
+
+global_model = keras.models.load_model('78Model.h5')
+
+lr = 0.01
+comms_round = 1000
+
+
+for comm_round in range(comms_round):
+
+    # get the global model's weights - will serve as the initial weights for all local models
+    global_weights = global_model.get_weights()
+    
+    #initial list to collect local model weights after scalling
+    scaled_local_weight_list = list()
+
+    #randomize client data - using keys
+    client_names= list(clients_batched.keys())
+    random.shuffle(client_names)
+    
+    #loop through each client and create new local model
+    for client in client_names:
+        stressy_local = Stressy_Model()
+        local_model = stressy_local.build()
+        local_model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+        
+        #set local model weight to the weight of the global model
+        local_model.set_weights(global_weights)
+        
+        #fit local model with client's data
+        local_model.fit(clients_batched[client], epochs=1)
+        
+        #scale the model weights and add to list
+        scaling_factor = weight_scalling_factor(clients_batched, client)
+        scaled_weights = scale_model_weights(local_model.get_weights(), scaling_factor)
+        scaled_local_weight_list.append(scaled_weights)
+        
+        #clear session to free memory after each communication round
+        K.clear_session()
+        
+    #to get the average over all the local model, we simply take the sum of the scaled weights
+    average_weights = sum_scaled_weights(scaled_local_weight_list)
+    
+    #update global model 
+    global_model.set_weights(average_weights)
+
+    #test global model and print out metrics after each communications round
+    for(X_test, Y_test) in test_batched:
+        global_acc, global_loss = test_model(X_test, Y_test, global_model, comm_round)

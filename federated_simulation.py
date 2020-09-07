@@ -199,8 +199,8 @@ global_model = keras.models.load_model('78Model.h5')
 # print('## evaluation loss and_metrics ##')
 # print(loss_and_metrics)
 
-lr = 0.01 
-comms_round = 1000        
+lr = 0.01
+comms_round = 1000
 
 for comm_round in range(comms_round):
 
