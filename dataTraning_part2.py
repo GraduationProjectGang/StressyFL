@@ -32,7 +32,7 @@ filePath_stress = './stressData_all.csv'
 trainingData_x = []
 trainingData_y = []
 
-LOADED_MODEL = keras.models.load_model('best_model_2_10.h5')
+LOADED_MODEL = keras.models.load_model('stressy_model.h5')
 
 # 정규화 [-1, 1]
 # std_posture 추가
@@ -65,7 +65,7 @@ trainingData_x = np.reshape(trainingData_x, (4014, 5, 6))
 # for i in range (0, len(trainingData_x)):
 #        print(trainingData_x[i], " ", trainingData_y[i])
 
-x_train,x_val,y_train,y_val = train_test_split(trainingData_x, trainingData_y, test_size = 0.2)
+x_train,x_val,y_train,y_val = train_test_split(trainingData_x, trainingData_y, test_size = 0.3)
 
 y_train = np_utils.to_categorical(y_train)
 y_val = np_utils.to_categorical(y_val)

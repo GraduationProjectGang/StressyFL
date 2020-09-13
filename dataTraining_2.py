@@ -57,10 +57,10 @@ trainingData_x = ((2 * (trainingData_x - trainingData_x.min(axis=0))) / (trainin
 # trainingData_x = trainingData_x.tolist()
 trainingData_x = np.reshape(trainingData_x, (4014, 5, 6))
 
-last_accuracy = 0.43
+last_accuracy = 0.8
 
 while True:
-       x_train,x_val,y_train,y_val = train_test_split(trainingData_x, trainingData_y, test_size = 0.2)
+       x_train,x_val,y_train,y_val = train_test_split(trainingData_x, trainingData_y, test_size = 0.3)
 
        y_train = np_utils.to_categorical(y_train)
        y_val = np_utils.to_categorical(y_val)
@@ -71,7 +71,7 @@ while True:
        # json_file.close()
        # loaded_model = model_from_json(loaded_model_json)
 
-       loaded_model = keras.models.load_model('best_model_2_10.h5')
+       loaded_model = keras.models.load_model('sibal.h5')
 
        loaded_model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
        hist = loaded_model.fit(x_train, y_train, epochs=200, batch_size=1, validation_data=(x_val, y_val))
@@ -84,4 +84,4 @@ while True:
               last_accuracy = loss_and_metrics[1]
               print("good")
               # Save the entire model to a HDF5 file
-              loaded_model.save('best_model_2_10.h5')
+              loaded_model.save('sibal.h5')

@@ -190,7 +190,7 @@ test_batched = tf.data.Dataset.from_tensor_slices((x_val, y_val)).batch(len(y_va
 # global_model.add(Dropout(0.5))
 # global_model.add(Dense(one_hot_vec_size, activation='softmax'))
 
-global_model = keras.models.load_model('78Model.h5')
+global_model = keras.models.load_model('stressy_model.h5')
 
 # global_model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 # hist = global_model.fit(x_train, y_train, epochs=200, batch_size=1, validation_data=(x_val, y_val))

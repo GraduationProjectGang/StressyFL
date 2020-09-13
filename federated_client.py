@@ -129,7 +129,7 @@ class Stressy_Model:
     @staticmethod
     def build():
         model = Sequential()
-        model.add(LSTM(128, stateful=True, input_shape=x_train.shape, batch_input_shape=(1,5,6)))
+        model.add(LSTM(128, input_shape=x_train.shape, batch_input_shape=(1,5,6)))
         model.add(Dropout(0.5))
         model.add(Dense(one_hot_vec_size, activation='softmax'))
         return model
@@ -177,7 +177,7 @@ y_train = np_utils.to_categorical(y_train)
 y_val = np_utils.to_categorical(y_val)
 one_hot_vec_size = y_train.shape[1]
 
-clients = create_clients(x_train, y_train, num_clients=5)
+clients = create_clients(x_train, y_train, num_clients=10)
 
 clients_batched = dict()
 
@@ -186,7 +186,7 @@ for(client_name, data) in clients.items():
 
 test_batched = tf.data.Dataset.from_tensor_slices((x_val, y_val)).batch(len(y_val))
 
-global_model = keras.models.load_model('78Model.h5')
+global_model = keras.models.load_model('stressy_model.h5')
 
 lr = 0.01
 comms_round = 1000
