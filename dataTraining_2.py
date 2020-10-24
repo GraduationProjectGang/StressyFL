@@ -24,8 +24,8 @@ from keras import regularizers, optimizers
 from keras.callbacks import LambdaCallback, ModelCheckpoint
 from keras.models import model_from_json
 
-physical_devices = tf.config.list_physical_devices('GPU')
-tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
+# physical_devices = tf.config.list_physical_devices('GPU')
+# tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
 
 filePath_data = './trainingData_all.csv'
 filePath_stress = './stressData_all.csv'
@@ -42,6 +42,8 @@ with open(filePath_data, encoding= 'UTF-8') as file:
                      each = ast.literal_eval(each)
                      map(float, each)
                      dummy_list.append(each)
+              dummy_list = np.array(dummy_list)
+              # print(dummy_list.shape)
 
               trainingData_x.append(dummy_list)
 
@@ -59,29 +61,30 @@ trainingData_x = np.reshape(trainingData_x, (4014, 5, 6))
 
 last_accuracy = 0.8
 
-while True:
-       x_train,x_val,y_train,y_val = train_test_split(trainingData_x, trainingData_y, test_size = 0.3)
+# while True:
+x_train,x_val,y_train,y_val = train_test_split(trainingData_x, trainingData_y, test_size = 0.3)
 
-       y_train = np_utils.to_categorical(y_train)
-       y_val = np_utils.to_categorical(y_val)
-       one_hot_vec_size = y_train.shape[1]
+y_train = np_utils.to_categorical(y_train)
+print(y_train.shape)
+y_val = np_utils.to_categorical(y_val)
+one_hot_vec_size = y_train.shape[1]
 
        # json_file = open("model.json", "r")
        # loaded_model_json = json_file.read()
        # json_file.close()
        # loaded_model = model_from_json(loaded_model_json)
 
-       loaded_model = keras.models.load_model('sibal.h5')
+       # loaded_model = keras.models.load_model('sibal.h5')
 
-       loaded_model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-       hist = loaded_model.fit(x_train, y_train, epochs=200, batch_size=1, validation_data=(x_val, y_val))
+       # loaded_model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+       # hist = loaded_model.fit(x_train, y_train, epochs=200, batch_size=1, validation_data=(x_val, y_val))
 
-       loss_and_metrics = loaded_model.evaluate(x_val, y_val, batch_size=1)
-       print('## evaluation loss and_metrics ##')
-       print(loss_and_metrics)
+       # loss_and_metrics = loaded_model.evaluate(x_val, y_val, batch_size=1)
+       # print('## evaluation loss and_metrics ##')
+       # print(loss_and_metrics)
 
-       if last_accuracy <= loss_and_metrics[1]:
-              last_accuracy = loss_and_metrics[1]
-              print("good")
-              # Save the entire model to a HDF5 file
-              loaded_model.save('sibal.h5')
+       # if last_accuracy <= loss_and_metrics[1]:
+       #        last_accuracy = loss_and_metrics[1]
+       #        print("good")
+       #        # Save the entire model to a HDF5 file
+       #        loaded_model.save('sibal.h5')

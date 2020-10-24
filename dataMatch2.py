@@ -14,7 +14,7 @@ statspath = './appstats.json'
 dataAll={}
 stressArr = []
 
-client_num = 0
+client_num = 1
 
 with open(jsonPath, encoding= 'UTF-8') as json_file:
     data = json.load(json_file)
@@ -78,25 +78,33 @@ with open(statspath, encoding= 'UTF-8') as file:
 
                                 client_stress.append(stressLabel)
 
-                                
-
                             else:
-                                print(dataAll[coroutine])
+                                # print(dataAll[coroutine])
                                 del dataAll[coroutine]
+                                del client_training[coroutine]
                                 
-        writeFilePath_t = './datas/trainingData_' + str(client_num) + '.csv'
-        writeFilePath_s = './datas/stressData_' + str(client_num) + '.csv'
+            
+        print(userKey)
+        if len(client_training.values()) == len(client_stress):
+            for idx, row in enumerate(client_training.values()):
+                writeFilePath_t = './data/trainingData_' + str(client_num) + '.csv'
+                writeFilePath_s = './data/stressData_' + str(client_num) + '.csv'
+                rowlist = list(row)
+                with open(writeFilePath_t,'w',newline='\n') as file:
+                    for each_row in rowlist:
+                        cw = csv.writer(file)
+                        cw.writerow(each_row)
 
-        client_num = client_num + 1
+                with open(writeFilePath_s,'w',newline='') as file:
+                    cw = csv.writer(file)
+                    for i in range(5):
+                        cw.writerow([client_stress[idx]])
+                client_num = client_num + 1
+                
+        else:
+            print("userKey %s, %f, %f"%(userKey, len(client_training.values()) ,len(client_stress)))
+            client_training = {}
+            client_stress = []
 
-        with open(writeFilePath_t,'w',newline='') as file:
-            for i in list(client_training.values()):
-                cw = csv.writer(file)
-                cw.writerow(i)
 
-        with open(writeFilePath_s,'w',newline='') as file:
-            cw = csv.writer(file)
-            cw.writerow(client_stress)
-
-print(len(dataAll))
-print(len(stressArr))
+print(client_num)
